@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 
 namespace Get_Info_by_INN_bot.Services
 {
@@ -59,9 +58,13 @@ namespace Get_Info_by_INN_bot.Services
                     {
                         await botClient.SendTextMessageAsync(message.Chat.Id, "Добро пожаловать!");
                     }
-                    else if (message.Text.StartsWith("/help"))
+                    if (message.Text.StartsWith("/help"))
                     {
-                        await botClient.SendTextMessageAsync(message.Chat.Id, "Доступные команды:\n/start - начать общение с ботом\n/help - вывести справку о доступных командах");
+                        await botClient.SendTextMessageAsync(message.Chat.Id, "Доступные команды:\n/start - начать общение с ботом\n/help - вывести справку о доступных командах\n/inn - поиск компаний по ИНН\n/hello - инфо о тестируемом");
+                    }
+                    if(message.Text.StartsWith("/hello"))
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat.Id, "Казазаев Денис, antswert@gmail.com, 04.11.23");
                     }
                     if (message.Text.StartsWith("/inn"))
                     {
@@ -73,19 +76,32 @@ namespace Get_Info_by_INN_bot.Services
 
                         _awaitingINN[chatId] = true;
 
-                        await botClient.SendTextMessageAsync(chatId, "Введите ИНН компании для поиска:");
+                        await botClient.SendTextMessageAsync(chatId, "Введите ИНН компании для поиска (разделяйте запятой, если несколько):");
 
                         continue;
                     }
 
                     if (_awaitingINN.ContainsKey(message.Chat.Id) && _awaitingINN[message.Chat.Id])
                     {
+                        string innInput = message.Text;
+                        string[] innList = innInput.Split(',');
 
-                        string inn = message.Text;
-                        var result = await _extractor.GetCompanyInfoByINN(inn, apiFNS);
-                        await botClient.SendTextMessageAsync(message.Chat.Id, result);
-
+                        foreach (string inn in innList)
+                        {
+                            try
+                            {
+                                var result = await _extractor.GetCompanyInfoByINN(inn.Trim(), apiFNS);
+                                await botClient.SendTextMessageAsync(message.Chat.Id, result);
+                            }
+                            catch(Exception ex)
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat.Id, ex.Message);
+                                throw;
+                            }
+                        }
                         _awaitingINN[message.Chat.Id] = false;
+                       
+
                     }
 
                     offset = update.Id + 1;
