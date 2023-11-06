@@ -96,7 +96,10 @@ namespace Get_Info_by_INN_bot.Services
                             catch(Exception ex)
                             {
                                 await botClient.SendTextMessageAsync(message.Chat.Id, ex.Message);
-                                throw;
+                            }
+                            finally
+                            {
+                                continue;
                             }
                         }
                         _awaitingINN[message.Chat.Id] = false;
