@@ -9,14 +9,16 @@ namespace Get_Info_by_INN_bot.Services
         {
             _httpClient = new HttpClient();
         }
-        public string GetTheFormatSearchResult(string rawContent)
+        public Queue<string> GetTheFormatSearchResult(string rawContent)
         {
 
             var jsonObject = JObject.Parse(rawContent);
 
             var companies = jsonObject["items"];
 
-            string message = "Информация о компаниях:\n\n";
+            string message = "Информация о компании:\n\n";
+
+            var result = new Queue<string>();
 
             foreach (var company in companies)
             {
@@ -28,12 +30,13 @@ namespace Get_Info_by_INN_bot.Services
 
                 string companyInfo = $"ИНН: {inn}\nОГРН: {ogrn}\nНаименование: {fullCompanyName}\nСтатус: {status}\nАдрес: {fullAddress}\n\n";
 
-                message += companyInfo;
+                result.Enqueue(message += companyInfo);
+
             }
-            return message;
+            return result;
 
         }
-        public async Task<string> GetCompanyInfoByINN(string inn, string api)
+        public async Task<Queue<string>> GetCompanyInfoByINN(string inn, string api)
         {
 
             string apiUrl = $@"https://api-fns.ru/api/search?q={inn}&key={api}";
@@ -46,7 +49,9 @@ namespace Get_Info_by_INN_bot.Services
             }
             else
             {
-                return "Обработка ошибки, например, логирование или возврат сообщения об ошибке";
+                var notFound = new Queue<string>();
+                notFound.Enqueue("ИНН не найден");
+                return notFound;
             }
         }
     }

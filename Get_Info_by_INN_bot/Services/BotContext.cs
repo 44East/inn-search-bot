@@ -91,14 +91,14 @@ namespace Get_Info_by_INN_bot.Services
                             try
                             {
                                 var result = await _extractor.GetCompanyInfoByINN(inn.Trim(), apiFNS);
-                                await botClient.SendTextMessageAsync(message.Chat.Id, result);
+                                while(result.Count > 0) 
+                                {
+                                    await botClient.SendTextMessageAsync(message.Chat.Id, result.Dequeue());
+                                }
                             }
                             catch(Exception ex)
                             {
                                 await botClient.SendTextMessageAsync(message.Chat.Id, ex.Message);
-                            }
-                            finally
-                            {
                                 continue;
                             }
                         }
